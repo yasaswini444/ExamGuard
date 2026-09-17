@@ -5,14 +5,13 @@
 #haar cascade looks for the patterns of light and the dark regions that resemble the object it trained to reconize.It is fast and easy to use .
 
 import cv2
-from datetime import datetime
+
 def start_face_monitoring():
     #Load face detector 
     face_cascade=cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
 
     #open camera
     camera=cv2.VideoCapture(0)
-    previous_state = None
 
     while True:
         success, frame=camera.read()
@@ -25,19 +24,6 @@ def start_face_monitoring():
 
         #detect faces
         faces=face_cascade.detectMultiScale(gray, scaleFactor=1.1, minNeighbors=5)
-
-        #Determine current state
-        if len(faces) > 0:
-            current_state = "face_detected"
-        else:
-            current_state = "face_absent"
-
-        #log only when state change 
-        if current_state != previous_state :
-            timestamp = datetime.now()
-            print(timestamp,current_state)
-
-        previous_state = current_state
 
         #draw rectangle around faces
         for (x, y, w, h) in faces:
@@ -55,3 +41,4 @@ def start_face_monitoring():
 
 if __name__ == "__main__":
     start_face_monitoring()
+   

@@ -3,6 +3,9 @@ from datetime import datetime
 from database import get_db
 
 
+# ----------------------------------------
+# LOG FACE STATE
+# ----------------------------------------
 def log_face_state(
     candidate_id,
     session_id,
@@ -14,7 +17,9 @@ def log_face_state(
     now = datetime.now().isoformat()
 
 
-    # Get previous open event
+    # ----------------------------------------
+    # GET PREVIOUS OPEN EVENT
+    # ----------------------------------------
     previous = connection.execute("""
         SELECT *
         FROM face_events
@@ -29,7 +34,9 @@ def log_face_state(
     )).fetchone()
 
 
-    # First event
+    # ----------------------------------------
+    # FIRST FACE EVENT
+    # ----------------------------------------
     if not previous:
 
         connection.execute("""
@@ -51,7 +58,12 @@ def log_face_state(
 
     else:
 
-        # Same state → do nothing
+        # ----------------------------------------
+        # SAME STATE
+        # ----------------------------------------
+        # If the face state has not changed,
+        # there is no need to create another event.
+
         if previous["event_type"] == current_state:
 
             connection.close()
@@ -59,7 +71,9 @@ def log_face_state(
             return
 
 
-        # State changed
+        # ----------------------------------------
+        # STATE CHANGED
+        # ----------------------------------------
         started_at = datetime.fromisoformat(
             previous["started_at"]
         )
@@ -71,7 +85,9 @@ def log_face_state(
         ).total_seconds()
 
 
-        # Close previous event
+        # ----------------------------------------
+        # CLOSE PREVIOUS EVENT
+        # ----------------------------------------
         connection.execute("""
             UPDATE face_events
 
@@ -87,7 +103,9 @@ def log_face_state(
         ))
 
 
-        # Start new event
+        # ----------------------------------------
+        # START NEW EVENT
+        # ----------------------------------------
         connection.execute("""
             INSERT INTO face_events
             (
@@ -105,6 +123,9 @@ def log_face_state(
         ))
 
 
+    # ----------------------------------------
+    # SAVE CHANGES
+    # ----------------------------------------
     connection.commit()
 
     connection.close()
