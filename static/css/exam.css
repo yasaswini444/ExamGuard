@@ -1,0 +1,613 @@
+/* =========================================================
+   EXAMGUARD - EXAMINATION PAGE
+   Dark Blue + White Modern UI
+========================================================= */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family:
+        "Segoe UI",
+        Arial,
+        sans-serif;
+
+    background:
+        #eef3f8;
+
+    color:
+        #102a43;
+
+    min-height:
+        100vh;
+}
+
+
+/* =========================================================
+   HEADER
+========================================================= */
+
+header {
+    height: 72px;
+
+    display: flex;
+
+    align-items: center;
+
+    justify-content: space-between;
+
+    padding: 0 5%;
+
+    background:
+        linear-gradient(
+            135deg,
+            #031326,
+            #073b78
+        );
+
+    color: white;
+
+    box-shadow:
+        0 5px 25px
+        rgba(3, 19, 38, 0.20);
+
+    position: sticky;
+
+    top: 0;
+
+    z-index: 100;
+}
+
+header h1 {
+    font-size: 20px;
+
+    letter-spacing:
+        0.3px;
+}
+
+header h1::before {
+    content:
+        "🛡 ";
+
+    color:
+        #5bc0ff;
+}
+
+header p {
+    color:
+        #a9c7e3;
+
+    font-size:
+        12px;
+
+    margin-top:
+        2px;
+}
+
+
+/* =========================================================
+   MAIN CONTAINER
+========================================================= */
+
+.container {
+    width:
+        92%;
+
+    max-width:
+        1400px;
+
+    margin:
+        25px auto 50px;
+}
+
+
+/* =========================================================
+   MONITORING BOX
+========================================================= */
+
+.monitor-box {
+    background:
+        white;
+
+    border-radius:
+        18px;
+
+    padding:
+        22px;
+
+    margin-bottom:
+        25px;
+
+    border:
+        1px solid #dce6ef;
+
+    box-shadow:
+        0 10px 35px
+        rgba(16, 42, 67, 0.08);
+}
+
+
+/* =========================================================
+   MONITORING TITLE
+========================================================= */
+
+.monitor-title {
+    display:
+        flex;
+
+    justify-content:
+        space-between;
+
+    align-items:
+        center;
+
+    margin-bottom:
+        18px;
+}
+
+.monitor-title h2 {
+    font-size:
+        18px;
+
+    color:
+        #071a33;
+}
+
+.live-badge {
+    padding:
+        6px 11px;
+
+    border-radius:
+        50px;
+
+    background:
+        #e9f8f0;
+
+    color:
+        #16834b;
+
+    font-size:
+        11px;
+
+    font-weight:
+        700;
+}
+
+
+/* =========================================================
+   STATUS GRID
+========================================================= */
+
+.status-grid {
+    display:
+        grid;
+
+    grid-template-columns:
+        repeat(3, 1fr);
+
+    gap:
+        12px;
+
+    margin-bottom:
+        18px;
+}
+
+.status-item {
+    padding:
+        14px 16px;
+
+    background:
+        #f5f8fb;
+
+    border:
+        1px solid #e0e8ef;
+
+    border-radius:
+        12px;
+
+    display:
+        flex;
+
+    justify-content:
+        space-between;
+
+    align-items:
+        center;
+}
+
+.status-label {
+    color:
+        #60758a;
+
+    font-size:
+        12px;
+
+    font-weight:
+        600;
+}
+
+.status-value {
+    font-size:
+        12px;
+
+    font-weight:
+        750;
+
+    color:
+        #d97706;
+}
+
+
+/* =========================================================
+   CAMERA
+========================================================= */
+
+#camera {
+    width:
+        100%;
+
+    max-width:
+        430px;
+
+    height:
+        270px;
+
+    display:
+        block;
+
+    margin:
+        0 auto;
+
+    object-fit:
+        cover;
+
+    background:
+        #020b17;
+
+    border:
+        3px solid #0b5ed7;
+
+    border-radius:
+        14px;
+
+    box-shadow:
+        0 12px 35px
+        rgba(3, 19, 38, 0.22);
+}
+
+#canvas {
+    display:
+        none;
+}
+
+
+/* =========================================================
+   EXAM INTRO
+========================================================= */
+
+.exam-intro {
+    display:
+        flex;
+
+    justify-content:
+        space-between;
+
+    align-items:
+        center;
+
+    margin-bottom:
+        20px;
+}
+
+.exam-intro h2 {
+    color:
+        #071a33;
+
+    font-size:
+        22px;
+}
+
+.exam-intro p {
+    color:
+        #71859a;
+
+    font-size:
+        12px;
+
+    margin-top:
+        4px;
+}
+
+
+/* =========================================================
+   QUESTION CARDS
+========================================================= */
+
+.question-card {
+    background:
+        white;
+
+    border:
+        1px solid #dce6ef;
+
+    border-radius:
+        16px;
+
+    padding:
+        25px;
+
+    margin-bottom:
+        18px;
+
+    box-shadow:
+        0 7px 25px
+        rgba(16, 42, 67, 0.06);
+
+    transition:
+        transform 0.2s ease,
+        box-shadow 0.2s ease;
+}
+
+.question-card:hover {
+    transform:
+        translateY(-2px);
+
+    box-shadow:
+        0 12px 30px
+        rgba(16, 42, 67, 0.09);
+}
+
+.question-card h3 {
+    color:
+        #071a33;
+
+    font-size:
+        15px;
+
+    line-height:
+        1.55;
+
+    margin-bottom:
+        17px;
+}
+
+
+/* =========================================================
+   RADIO OPTIONS
+========================================================= */
+
+.question-card label {
+    display:
+        flex;
+
+    align-items:
+        center;
+
+    gap:
+        10px;
+
+    padding:
+        12px 14px;
+
+    margin:
+        7px 0;
+
+    background:
+        #f7f9fc;
+
+    border:
+        1px solid #e1e8ef;
+
+    border-radius:
+        9px;
+
+    cursor:
+        pointer;
+
+    color:
+        #40566c;
+
+    font-size:
+        13px;
+
+    transition:
+        0.2s;
+}
+
+.question-card label:hover {
+    background:
+        #edf6ff;
+
+    border-color:
+        #91c8f5;
+
+    color:
+        #075ca8;
+}
+
+.question-card input[type="radio"] {
+    accent-color:
+        #0868d5;
+
+    width:
+        16px;
+
+    height:
+        16px;
+}
+
+
+/* =========================================================
+   SUBMIT ANSWER
+========================================================= */
+
+.submit-answer {
+    padding:
+        10px 18px;
+
+    background:
+        #071a33;
+
+    color:
+        white;
+
+    border:
+        none;
+
+    border-radius:
+        8px;
+
+    font-size:
+        12px;
+
+    font-weight:
+        700;
+
+    cursor:
+        pointer;
+
+    transition:
+        0.2s;
+}
+
+.submit-answer:hover {
+    background:
+        #0b5ed7;
+
+    transform:
+        translateY(-1px);
+}
+
+
+/* =========================================================
+   EVENT LOG
+========================================================= */
+
+#event-log {
+    max-height:
+        210px;
+
+    overflow-y:
+        auto;
+
+    background:
+        #061426;
+
+    border-radius:
+        12px;
+
+    padding:
+        14px;
+
+    margin-top:
+        20px;
+
+    color:
+        #b7d4ee;
+
+    font-family:
+        Consolas,
+        monospace;
+
+    font-size:
+        11px;
+
+    border:
+        1px solid #12365b;
+}
+
+#event-log div {
+    padding:
+        6px 0;
+
+    border-bottom:
+        1px solid
+        rgba(255,255,255,0.05);
+}
+
+#event-log div:last-child {
+    border-bottom:
+        none;
+}
+
+
+/* =========================================================
+   SCROLLBAR
+========================================================= */
+
+::-webkit-scrollbar {
+    width:
+        7px;
+}
+
+::-webkit-scrollbar-track {
+    background:
+        #e9eef4;
+}
+
+::-webkit-scrollbar-thumb {
+    background:
+        #9eb4c8;
+
+    border-radius:
+        10px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background:
+        #718da7;
+}
+
+
+/* =========================================================
+   RESPONSIVE
+========================================================= */
+
+@media (max-width: 850px) {
+
+    .status-grid {
+        grid-template-columns:
+            1fr;
+    }
+
+    .container {
+        width:
+            94%;
+    }
+
+    #camera {
+        height:
+            240px;
+    }
+}
+
+@media (max-width: 550px) {
+
+    header {
+        padding:
+            0 4%;
+    }
+
+    header h1 {
+        font-size:
+            17px;
+    }
+
+    .monitor-box {
+        padding:
+            15px;
+    }
+
+    .question-card {
+        padding:
+            18px;
+    }
+
+    #camera {
+        height:
+            210px;
+    }
+}

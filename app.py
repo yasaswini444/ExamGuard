@@ -12,7 +12,7 @@ from werkzeug.security import (
     generate_password_hash,
     check_password_hash
 )
-
+from monitoring import eventdetector
 from camera import save_captured_photo
 
 from monitoring.face_logger import log_face_state
@@ -718,6 +718,9 @@ def log_browser_event():
         # ----------------------------------------------------
 
         connection.commit()
+
+        eventdetector.evaluate_browser_event(connection,candidate_id,exam_session_id,event_type)
+
 
     except Exception as e:
 

@@ -1,66 +1,235 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 
 <head>
-    <title>ExamGuard Dashboard</title>
 
-    <style>
-        body {
-            margin: 0;
-            font-family: Arial, sans-serif;
-            background: #f2f0e8;
-            color: #26332d;
-            text-align: center;
-        }
+    <meta charset="UTF-8">
 
-        h1 {
-            margin-top: 100px;
-            color: #34483d;
-        }
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
 
-        p {
-            color: #66756b;
-            font-size: 16px;
-        }
+    <title>ExamGuard | Candidate Dashboard</title>
 
-        .dashboard-box {
-            width: 500px;
-            margin: 30px auto;
-            padding: 40px;
-            background: #ffffff;
-            border: 1px solid #d9ddd5;
-            border-radius: 12px;
-            box-shadow: 0 8px 25px rgba(38, 51, 45, 0.08);
-        }
-
-        a {
-            display: inline-block;
-            margin-top: 20px;
-            padding: 11px 25px;
-            background: #536b5d;
-            color: white;
-            text-decoration: none;
-            border-radius: 6px;
-        }
-
-        a:hover {
-            background: #3f5548;
-        }
-    </style>
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='css/dashboard.css') }}">
 
 </head>
 
+
 <body>
 
-    <div class="dashboard-box">
 
-        <h1>Candidate Dashboard</h1>
+<!-- =====================================================
+     NAVBAR
+===================================================== -->
 
-        <p>Welcome to ExamGuard!</p>
+<nav class="navbar">
 
-        <a href="/logout">Logout</a>
+    <div class="logo">
+
+        <div class="logo-icon">
+            🛡
+        </div>
+
+        <div>
+
+            <h2>
+                ExamGuard
+            </h2>
+
+            <span>
+                SMART EXAM MONITORING
+            </span>
+
+        </div>
 
     </div>
+
+
+    <a href="/logout"
+       class="logout">
+
+        Logout
+
+    </a>
+
+</nav>
+
+
+
+<!-- =====================================================
+     MAIN CONTENT
+===================================================== -->
+
+<main class="main">
+
+
+    <!-- =================================================
+         HERO SECTION
+    ================================================== -->
+
+    <section class="hero">
+
+
+        <div class="hero-content">
+
+
+            <div class="badge">
+                ● CANDIDATE PORTAL
+            </div>
+
+
+            <h1>
+
+                Welcome to your
+                <span>Examination</span>
+                Portal
+
+            </h1>
+
+
+            <p>
+
+                Take your examination in a monitored
+                digital environment with camera-based
+                face presence detection and browser
+                activity monitoring.
+
+            </p>
+
+
+            <a href="/start-exam"
+               class="start-button">
+
+                Start Examination
+                &nbsp; →
+
+            </a>
+
+
+        </div>
+
+
+
+        <!-- SECURITY VISUAL -->
+
+        <div class="security-orb">
+
+            <div class="shield">
+                🛡
+            </div>
+
+        </div>
+
+
+    </section>
+
+
+
+    <!-- =================================================
+         FEATURES
+    ================================================== -->
+
+    <h2 class="section-title">
+
+        Monitoring Features
+
+    </h2>
+
+
+
+    <section class="cards">
+
+
+        <!-- CARD 1 -->
+
+        <div class="card">
+
+            <div class="card-icon">
+                ◉
+            </div>
+
+            <h3>
+                Face Monitoring
+            </h3>
+
+            <p>
+
+                The webcam continuously checks
+                face presence during the examination
+                session.
+
+            </p>
+
+        </div>
+
+
+
+        <!-- CARD 2 -->
+
+        <div class="card">
+
+            <div class="card-icon">
+                ◈
+            </div>
+
+            <h3>
+                Browser Monitoring
+            </h3>
+
+            <p>
+
+                Browser interactions such as tab
+                switching, copy, paste and focus
+                changes can be logged.
+
+            </p>
+
+        </div>
+
+
+
+        <!-- CARD 3 -->
+
+        <div class="card">
+
+            <div class="card-icon">
+                ✓
+            </div>
+
+            <h3>
+                Activity Logging
+            </h3>
+
+            <p>
+
+                Important examination events are
+                recorded with timestamps for later
+                review.
+
+            </p>
+
+        </div>
+
+
+    </section>
+
+
+
+    <!-- =================================================
+         FOOTER
+    ================================================== -->
+
+    <div class="footer">
+
+        ExamGuard © 2026 · Secure Digital
+        Examination Platform
+
+    </div>
+
+
+</main>
+
 
 </body>
 

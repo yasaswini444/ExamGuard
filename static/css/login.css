@@ -1,3 +1,8 @@
+/* =========================================================
+   EXAMGUARD - LOGIN PAGE
+   Dark Blue + White Modern UI
+========================================================= */
+
 /* ================================
    RESET
 ================================ */
@@ -14,22 +19,74 @@
 ================================ */
 
 body {
-
     min-height: 100vh;
 
     display: flex;
-
     justify-content: center;
-
     align-items: center;
 
-    font-family: Arial, Helvetica, sans-serif;
+    font-family: "Segoe UI", Arial, Helvetica, sans-serif;
 
-    background: #071a33;
+    background:
+        linear-gradient(
+            135deg,
+            rgba(3, 16, 38, 0.96),
+            rgba(7, 35, 75, 0.94)
+        ),
+        url("https://images.unsplash.com/photo-1550751827-4bd374c3f58b?auto=format&fit=crop&w=1800&q=80");
+
+    background-size: cover;
+    background-position: center;
 
     color: #071a33;
 
-    padding: 30px;
+    padding: 35px;
+
+    position: relative;
+}
+
+
+/* Decorative glow */
+
+body::before {
+    content: "";
+
+    position: fixed;
+
+    width: 350px;
+    height: 350px;
+
+    top: -120px;
+    left: -100px;
+
+    background: rgba(30, 136, 229, 0.18);
+
+    border-radius: 50%;
+
+    filter: blur(70px);
+
+    pointer-events: none;
+}
+
+
+body::after {
+    content: "";
+
+    position: fixed;
+
+    width: 300px;
+    height: 300px;
+
+    bottom: -120px;
+    right: -80px;
+
+    background: rgba(0, 188, 212, 0.15);
+
+    border-radius: 50%;
+
+    filter: blur(70px);
+
+    pointer-events: none;
 }
 
 
@@ -38,44 +95,151 @@ body {
 ================================ */
 
 .login-container {
-
     width: 100%;
+    max-width: 1050px;
 
-    max-width: 420px;
+    min-height: 600px;
 
+    display: grid;
+
+    grid-template-columns: 1fr 420px;
+
+    background: rgba(255, 255, 255, 0.08);
+
+    border: 1px solid rgba(255, 255, 255, 0.15);
+
+    border-radius: 24px;
+
+    overflow: hidden;
+
+    box-shadow:
+        0 30px 80px rgba(0, 0, 0, 0.45);
+
+    backdrop-filter: blur(12px);
+
+    position: relative;
+
+    z-index: 1;
 }
 
 
 /* ================================
-   BRAND
+   BRAND / LEFT PANEL
 ================================ */
 
 .brand {
+    min-height: 600px;
 
-    text-align: center;
+    display: flex;
 
-    margin-bottom: 20px;
+    flex-direction: column;
 
+    justify-content: center;
+
+    padding: 65px;
+
+    position: relative;
+
+    overflow: hidden;
+
+    background:
+        linear-gradient(
+            rgba(4, 24, 55, 0.72),
+            rgba(4, 24, 55, 0.90)
+        ),
+        url("https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=1200&q=80");
+
+    background-size: cover;
+    background-position: center;
+}
+
+
+/* Decorative grid */
+
+.brand::before {
+    content: "";
+
+    position: absolute;
+
+    inset: 0;
+
+    background-image:
+        linear-gradient(
+            rgba(255,255,255,0.035) 1px,
+            transparent 1px
+        ),
+        linear-gradient(
+            90deg,
+            rgba(255,255,255,0.035) 1px,
+            transparent 1px
+        );
+
+    background-size: 35px 35px;
+
+    pointer-events: none;
+}
+
+
+.brand::after {
+    content: "";
+
+    position: absolute;
+
+    width: 260px;
+    height: 260px;
+
+    right: -100px;
+    bottom: -100px;
+
+    border-radius: 50%;
+
+    border: 1px solid rgba(91, 192, 255, 0.25);
+
+    box-shadow:
+        0 0 0 40px rgba(91, 192, 255, 0.03),
+        0 0 0 80px rgba(91, 192, 255, 0.02);
 }
 
 
 .brand h1 {
-
     color: white;
 
-    font-size: 32px;
+    font-size: 48px;
 
-    margin-bottom: 6px;
+    font-weight: 750;
 
+    letter-spacing: -1px;
+
+    margin-bottom: 10px;
+
+    position: relative;
+
+    z-index: 2;
 }
 
 
 .brand p {
+    color: #b9d4ef;
 
-    color: #b8c7d9;
+    font-size: 17px;
 
-    font-size: 14px;
+    margin-bottom: 30px;
 
+    position: relative;
+
+    z-index: 2;
+}
+
+
+/* Feature text */
+
+.brand::marker {
+    display: none;
+}
+
+
+.brand .security-info {
+    color: white;
 }
 
 
@@ -84,18 +248,20 @@ body {
 ================================ */
 
 .login-card {
-
     width: 100%;
 
-    background: white;
+    background: rgba(255, 255, 255, 0.98);
 
-    padding: 35px 40px;
+    padding: 55px 45px;
 
-    border-radius: 14px;
+    display: flex;
+
+    flex-direction: column;
+
+    justify-content: center;
 
     box-shadow:
-        0 15px 40px rgba(0, 0, 0, 0.45);
-
+        -10px 0 40px rgba(0, 0, 0, 0.08);
 }
 
 
@@ -104,30 +270,28 @@ body {
 ================================ */
 
 .login-card h2 {
-
     text-align: center;
 
     color: #071a33;
 
-    font-size: 27px;
+    font-size: 29px;
 
-    margin-bottom: 8px;
+    font-weight: 700;
 
+    margin-bottom: 9px;
 }
 
 
 .subtitle {
-
     text-align: center;
 
-    color: #60758a;
+    color: #65788d;
 
     font-size: 14px;
 
-    line-height: 1.5;
+    line-height: 1.6;
 
-    margin-bottom: 28px;
-
+    margin-bottom: 30px;
 }
 
 
@@ -136,9 +300,7 @@ body {
 ================================ */
 
 .input-group {
-
-    margin-bottom: 20px;
-
+    margin-bottom: 21px;
 }
 
 
@@ -147,17 +309,15 @@ body {
 ================================ */
 
 label {
-
     display: block;
 
-    margin-bottom: 7px;
+    margin-bottom: 8px;
 
-    font-size: 14px;
+    font-size: 13px;
 
-    font-weight: 600;
+    font-weight: 700;
 
-    color: #102a43;
-
+    color: #17324d;
 }
 
 
@@ -166,31 +326,46 @@ label {
 ================================ */
 
 input {
-
     width: 100%;
 
-    padding: 12px 14px;
+    padding: 14px 15px;
 
-    border: 1px solid #b8c7d9;
+    border: 1px solid #d5dfeb;
 
-    border-radius: 7px;
+    border-radius: 9px;
 
     font-size: 15px;
 
+    color: #102a43;
+
+    background: #f8fafc;
+
     outline: none;
 
-    transition: 0.3s;
+    transition:
+        border-color 0.25s ease,
+        box-shadow 0.25s ease,
+        background 0.25s ease;
+}
 
+
+input::placeholder {
+    color: #91a1b2;
+}
+
+
+input:hover {
+    border-color: #a9bdd2;
 }
 
 
 input:focus {
+    background: white;
 
-    border-color: #0b5ed7;
+    border-color: #1479e8;
 
     box-shadow:
-        0 0 0 3px rgba(11, 94, 215, 0.15);
-
+        0 0 0 4px rgba(20, 121, 232, 0.12);
 }
 
 
@@ -199,38 +374,50 @@ input:focus {
 ================================ */
 
 button {
-
     width: 100%;
 
-    padding: 13px;
+    padding: 14px;
 
-    margin-top: 5px;
+    margin-top: 6px;
 
-    background: #071a33;
+    background:
+        linear-gradient(
+            135deg,
+            #071a33,
+            #0b5ed7
+        );
 
     color: white;
 
     border: none;
 
-    border-radius: 7px;
+    border-radius: 9px;
 
-    font-size: 16px;
+    font-size: 15px;
 
-    font-weight: 600;
+    font-weight: 700;
+
+    letter-spacing: 0.2px;
 
     cursor: pointer;
 
-    transition: 0.3s;
-
+    transition:
+        transform 0.25s ease,
+        box-shadow 0.25s ease,
+        opacity 0.25s ease;
 }
 
 
 button:hover {
+    transform: translateY(-2px);
 
-    background: #0b5ed7;
+    box-shadow:
+        0 10px 25px rgba(11, 94, 215, 0.30);
+}
 
-    transform: translateY(-1px);
 
+button:active {
+    transform: translateY(0);
 }
 
 
@@ -239,33 +426,60 @@ button:hover {
 ================================ */
 
 .register-link {
-
     text-align: center;
 
-    margin-top: 22px;
+    margin-top: 25px;
 
     font-size: 14px;
 
-    color: #60758a;
-
+    color: #708195;
 }
 
 
 .register-link a {
+    color: #0868d5;
 
-    color: #0b5ed7;
-
-    font-weight: 600;
+    font-weight: 700;
 
     text-decoration: none;
 
+    transition: color 0.2s ease;
 }
 
 
 .register-link a:hover {
+    color: #043f8c;
 
     text-decoration: underline;
+}
 
+
+/* ================================
+   SECURITY BADGE
+================================ */
+
+.login-card::before {
+    content: "●  Secure Examination Portal";
+
+    display: block;
+
+    width: fit-content;
+
+    margin: 0 auto 25px;
+
+    padding: 7px 13px;
+
+    border-radius: 50px;
+
+    background: #edf6ff;
+
+    color: #0868d5;
+
+    font-size: 11px;
+
+    font-weight: 700;
+
+    letter-spacing: 0.2px;
 }
 
 
@@ -273,26 +487,71 @@ button:hover {
    RESPONSIVE
 ================================ */
 
+@media (max-width: 850px) {
+
+    body {
+        padding: 20px;
+    }
+
+    .login-container {
+        max-width: 520px;
+
+        min-height: auto;
+
+        grid-template-columns: 1fr;
+    }
+
+    .brand {
+        min-height: 250px;
+
+        padding: 40px;
+
+        justify-content: center;
+    }
+
+    .brand h1 {
+        font-size: 38px;
+    }
+
+    .brand p {
+        margin-bottom: 0;
+    }
+
+    .login-card {
+        padding: 40px 35px;
+    }
+}
+
+
 @media (max-width: 500px) {
 
     body {
-
-        padding: 20px;
-
+        padding: 15px;
     }
 
-
-    .login-card {
-
-        padding: 30px 25px;
-
+    .login-container {
+        border-radius: 18px;
     }
 
+    .brand {
+        min-height: 210px;
+
+        padding: 30px;
+    }
 
     .brand h1 {
-
-        font-size: 28px;
-
+        font-size: 32px;
     }
 
+    .brand p {
+        font-size: 14px;
+    }
+
+    .login-card {
+        padding: 35px 25px;
+    }
+
+    .login-card h2 {
+        font-size: 25px;
+    }
 }
