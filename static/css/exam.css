@@ -9,6 +9,7 @@
     box-sizing: border-box;
 }
 
+
 body {
     font-family:
         "Segoe UI",
@@ -61,12 +62,14 @@ header {
     z-index: 100;
 }
 
+
 header h1 {
     font-size: 20px;
 
     letter-spacing:
         0.3px;
 }
+
 
 header h1::before {
     content:
@@ -75,6 +78,7 @@ header h1::before {
     color:
         #5bc0ff;
 }
+
 
 header p {
     color:
@@ -148,6 +152,7 @@ header p {
         18px;
 }
 
+
 .monitor-title h2 {
     font-size:
         18px;
@@ -155,6 +160,7 @@ header p {
     color:
         #071a33;
 }
+
 
 .live-badge {
     padding:
@@ -195,6 +201,7 @@ header p {
         18px;
 }
 
+
 .status-item {
     padding:
         14px 16px;
@@ -218,6 +225,7 @@ header p {
         center;
 }
 
+
 .status-label {
     color:
         #60758a;
@@ -228,6 +236,7 @@ header p {
     font-weight:
         600;
 }
+
 
 .status-value {
     font-size:
@@ -242,18 +251,15 @@ header p {
 
 
 /* =========================================================
-   CAMERA
+   CAMERA - SMALL SQUARE BOX
 ========================================================= */
 
 #camera {
     width:
-        100%;
-
-    max-width:
-        430px;
+        220px;
 
     height:
-        270px;
+        220px;
 
     display:
         block;
@@ -271,12 +277,17 @@ header p {
         3px solid #0b5ed7;
 
     border-radius:
-        14px;
+        12px;
 
     box-shadow:
-        0 12px 35px
+        0 10px 28px
         rgba(3, 19, 38, 0.22);
 }
+
+
+/* =========================================================
+   HIDDEN CANVAS
+========================================================= */
 
 #canvas {
     display:
@@ -302,6 +313,7 @@ header p {
         20px;
 }
 
+
 .exam-intro h2 {
     color:
         #071a33;
@@ -309,6 +321,7 @@ header p {
     font-size:
         22px;
 }
+
 
 .exam-intro p {
     color:
@@ -351,6 +364,7 @@ header p {
         box-shadow 0.2s ease;
 }
 
+
 .question-card:hover {
     transform:
         translateY(-2px);
@@ -359,6 +373,7 @@ header p {
         0 12px 30px
         rgba(16, 42, 67, 0.09);
 }
+
 
 .question-card h3 {
     color:
@@ -417,6 +432,7 @@ header p {
         0.2s;
 }
 
+
 .question-card label:hover {
     background:
         #edf6ff;
@@ -427,6 +443,7 @@ header p {
     color:
         #075ca8;
 }
+
 
 .question-card input[type="radio"] {
     accent-color:
@@ -471,7 +488,11 @@ header p {
 
     transition:
         0.2s;
+
+    margin-top:
+        8px;
 }
+
 
 .submit-answer:hover {
     background:
@@ -479,6 +500,149 @@ header p {
 
     transform:
         translateY(-1px);
+}
+
+
+.submit-answer.saved {
+    background:
+        #198754;
+
+    color:
+        white;
+
+    cursor:
+        default;
+}
+
+
+.submit-answer:disabled {
+    opacity:
+        0.75;
+
+    cursor:
+        not-allowed;
+
+    transform:
+        none;
+}
+
+
+/* =========================================================
+   FINAL EXAM SUBMISSION
+========================================================= */
+
+.submit-exam-section {
+    background:
+        white;
+
+    border:
+        1px solid #dce6ef;
+
+    border-radius:
+        18px;
+
+    padding:
+        35px;
+
+    margin:
+        35px 0 30px;
+
+    text-align:
+        center;
+
+    box-shadow:
+        0 10px 30px
+        rgba(16, 42, 67, 0.08);
+}
+
+
+.submit-exam-section h2 {
+    color:
+        #071a33;
+
+    font-size:
+        22px;
+
+    margin-bottom:
+        10px;
+}
+
+
+.submit-exam-section p {
+    color:
+        #71859a;
+
+    font-size:
+        13px;
+
+    margin-bottom:
+        22px;
+}
+
+
+.submit-exam-btn {
+    padding:
+        14px 35px;
+
+    background:
+        linear-gradient(
+            135deg,
+            #073b78,
+            #0b5ed7
+        );
+
+    color:
+        white;
+
+    border:
+        none;
+
+    border-radius:
+        9px;
+
+    font-size:
+        14px;
+
+    font-weight:
+        700;
+
+    cursor:
+        pointer;
+
+    transition:
+        0.2s;
+
+    box-shadow:
+        0 8px 20px
+        rgba(11, 94, 215, 0.20);
+}
+
+
+.submit-exam-btn:hover {
+    background:
+        linear-gradient(
+            135deg,
+            #052d5c,
+            #084caa
+        );
+
+    transform:
+        translateY(-2px);
+}
+
+
+.submit-exam-btn:disabled {
+    background:
+        #198754;
+
+    cursor:
+        not-allowed;
+
+    transform:
+        none;
+
+    box-shadow:
+        none;
 }
 
 
@@ -519,14 +683,16 @@ header p {
         1px solid #12365b;
 }
 
+
 #event-log div {
     padding:
         6px 0;
 
     border-bottom:
         1px solid
-        rgba(255,255,255,0.05);
+        rgba(255, 255, 255, 0.05);
 }
+
 
 #event-log div:last-child {
     border-bottom:
@@ -543,10 +709,12 @@ header p {
         7px;
 }
 
+
 ::-webkit-scrollbar-track {
     background:
         #e9eef4;
 }
+
 
 ::-webkit-scrollbar-thumb {
     background:
@@ -556,6 +724,7 @@ header p {
         10px;
 }
 
+
 ::-webkit-scrollbar-thumb:hover {
     background:
         #718da7;
@@ -563,7 +732,7 @@ header p {
 
 
 /* =========================================================
-   RESPONSIVE
+   RESPONSIVE - TABLET
 ========================================================= */
 
 @media (max-width: 850px) {
@@ -573,16 +742,27 @@ header p {
             1fr;
     }
 
+
     .container {
         width:
             94%;
     }
 
+
     #camera {
+        width:
+            200px;
+
         height:
-            240px;
+            200px;
     }
+
 }
+
+
+/* =========================================================
+   RESPONSIVE - MOBILE
+========================================================= */
 
 @media (max-width: 550px) {
 
@@ -591,23 +771,43 @@ header p {
             0 4%;
     }
 
+
     header h1 {
         font-size:
             17px;
     }
+
 
     .monitor-box {
         padding:
             15px;
     }
 
+
     .question-card {
         padding:
             18px;
     }
 
+
     #camera {
+        width:
+            180px;
+
         height:
-            210px;
+            180px;
     }
+
+
+    .submit-exam-section {
+        padding:
+            25px 18px;
+    }
+
+
+    .submit-exam-btn {
+        width:
+            100%;
+    }
+
 }

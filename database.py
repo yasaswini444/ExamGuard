@@ -1,3 +1,4 @@
+
 import sqlite3
 import os
 
@@ -21,6 +22,7 @@ def get_db():
     # candidate["created_at"]
 
     connection.row_factory = sqlite3.Row
+
     return connection
 
 
@@ -34,154 +36,229 @@ def init_db():
 
     connection = get_db()
 
+    try:
 
-    # ----------------------------------------
-    # CANDIDATES TABLE
-    # ----------------------------------------
-    # connection.execute("""
-    #     CREATE TABLE IF NOT EXISTS candidates (
+        # ----------------------------------------
+        # CANDIDATES TABLE
+        # ----------------------------------------
+        connection.execute("""
+            CREATE TABLE IF NOT EXISTS candidates (
 
-    #         id INTEGER PRIMARY KEY AUTOINCREMENT,
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
 
-    #         name TEXT NOT NULL,
+                name TEXT NOT NULL,
 
-    #         email TEXT NOT NULL UNIQUE,
+                email TEXT NOT NULL UNIQUE,
 
-    #         password TEXT NOT NULL,
+                password TEXT NOT NULL,
 
-    #         photo TEXT,
+                photo TEXT,
 
-    #         created_at TEXT
-    #     )
-    # """)
-
-
-    # ----------------------------------------
-    # CHECK CREATED_AT COLUMN
-    # ----------------------------------------
-    # This protects an older existing database.
-    # If created_at already exists, nothing happens.
-    # If it does not exist, the column is added.
-
-    columns = connection.execute(
-        "PRAGMA table_info(candidates)"
-    ).fetchall()
-
-    column_names = [
-        column["name"]
-        for column in columns
-    ]
-
-    if "created_at" not in column_names:
-
-        connection.execute(
-            "ALTER TABLE candidates ADD COLUMN created_at TEXT"
-        )
+                created_at TEXT
+            )
+        """)
 
 
-    # ----------------------------------------
-    # FACE MONITORING EVENTS
-    # ----------------------------------------
-    # connection.execute("""
-    #     CREATE TABLE IF NOT EXISTS face_events (
+        # ----------------------------------------
+        # CHECK CREATED_AT COLUMN
+        # ----------------------------------------
+        # Protects an older existing database.
+        # If created_at already exists, nothing happens.
+        # If it does not exist, the column is added.
 
-    #         id INTEGER PRIMARY KEY AUTOINCREMENT,
+        columns = connection.execute(
+            "PRAGMA table_info(candidates)"
+        ).fetchall()
 
-    #         candidate_id INTEGER NOT NULL,
+        column_names = [
+            column["name"]
+            for column in columns
+        ]
 
-    #         session_id TEXT NOT NULL,
+        if "created_at" not in column_names:
 
-    #         event_type TEXT NOT NULL,
-
-    #         started_at TEXT NOT NULL,
-
-    #         ended_at TEXT,
-
-    #         duration_seconds REAL,
-
-    #         FOREIGN KEY (candidate_id)
-    #             REFERENCES candidates(id)
-    #     )
-    # """)
+            connection.execute(
+                "ALTER TABLE candidates ADD COLUMN created_at TEXT"
+            )
 
 
-    # ----------------------------------------
-    # BROWSER ACTIVITY EVENTS
-    # ----------------------------------------
-    # connection.execute("""
-    #     CREATE TABLE IF NOT EXISTS browser_events (
+        # ----------------------------------------
+        # FACE MONITORING EVENTS
+        # ----------------------------------------
+        connection.execute("""
+            CREATE TABLE IF NOT EXISTS face_events (
 
-    #         id INTEGER PRIMARY KEY AUTOINCREMENT,
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
 
-    #         candidate_id INTEGER NOT NULL,
+                candidate_id INTEGER NOT NULL,
 
-    #         session_id TEXT NOT NULL,
+                session_id TEXT NOT NULL,
 
-    #         event_type TEXT NOT NULL,
+                event_type TEXT NOT NULL,
 
-    #         event_time TEXT NOT NULL,
+                started_at TEXT NOT NULL,
 
-    #         details TEXT,
+                ended_at TEXT,
 
-    #         FOREIGN KEY (candidate_id)
-    #             REFERENCES candidates(id)
-    #     )
-    # """)
+                duration_seconds REAL,
 
-
-    # ----------------------------------------
-    # SUSPICIOUS EVENTS
-    # ----------------------------------------
-    # connection.execute("""
-    #     CREATE TABLE IF NOT EXISTS suspicious_events (
-
-    #         id INTEGER PRIMARY KEY AUTOINCREMENT,
-
-    #         candidate_id INTEGER NOT NULL,
-
-    #         session_id TEXT NOT NULL,
-
-    #         event_type TEXT NOT NULL,
-
-    #         reason TEXT NOT NULL,
-
-    #         event_time TEXT NOT NULL,
-
-    #         severity TEXT NOT NULL,
-
-    #         FOREIGN KEY (candidate_id)
-    #             REFERENCES candidates(id)
-    #     )
-    # """)
-    # connection.execute("""
-    #     CREATE TABLE IF NOT EXISTS exam_sessions (
-    #         id INTEGER PRIMARY KEY AUTOINCREMENT,
-    #         candidate_id INTEGER NOT NULL,
-    #         session_id TEXT UNIQUE NOT NULL,
-    #         status TEXT NOT NULL DEFAULT 'in_progress',
-    #         started_at TEXT NOT NULL,
-    #         paused_at TEXT,
-    #         resumed_at TEXT,
-    #         submitted_at TEXT,
-    #         FOREIGN KEY (candidate_id) REFERENCES candidates(id)
-    #     )
-    # """)
-
-    result = connection.execute("SELECT * FROM suspicious_events").fetchall()
-
-    print("Number of rows:", len(result))
-
-    for row in result:
-        print(dict(row)) 
+                FOREIGN KEY (candidate_id)
+                    REFERENCES candidates(id)
+            )
+        """)
 
 
-    # ----------------------------------------
-    # SAVE DATABASE CHANGES
-    # ----------------------------------------
-    connection.commit()
+        # ----------------------------------------
+        # BROWSER ACTIVITY EVENTS
+        # ----------------------------------------
+        connection.execute("""
+            CREATE TABLE IF NOT EXISTS browser_events (
+
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+
+                candidate_id INTEGER NOT NULL,
+
+                session_id TEXT NOT NULL,
+
+                event_type TEXT NOT NULL,
+
+                event_time TEXT NOT NULL,
+
+                details TEXT,
+
+                FOREIGN KEY (candidate_id)
+                    REFERENCES candidates(id)
+            )
+        """)
 
 
-    # ----------------------------------------
-    # CLOSE DATABASE CONNECTION
-    # ----------------------------------------
-    connection.close()
+        # ----------------------------------------
+        # SUSPICIOUS EVENTS
+        # ----------------------------------------
+        connection.execute("""
+            CREATE TABLE IF NOT EXISTS suspicious_events (
+
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+
+                candidate_id INTEGER NOT NULL,
+
+                session_id TEXT NOT NULL,
+
+                event_type TEXT NOT NULL,
+
+                reason TEXT NOT NULL,
+
+                event_time TEXT NOT NULL,
+
+                severity TEXT NOT NULL,
+
+                FOREIGN KEY (candidate_id)
+                    REFERENCES candidates(id)
+            )
+        """)
+
+
+        # ----------------------------------------
+        # EXAM SESSIONS
+        # ----------------------------------------
+        connection.execute("""
+            CREATE TABLE IF NOT EXISTS exam_sessions (
+
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+
+                candidate_id INTEGER NOT NULL,
+
+                session_id TEXT UNIQUE NOT NULL,
+
+                status TEXT NOT NULL DEFAULT 'in_progress',
+
+                started_at TEXT NOT NULL,
+
+                paused_at TEXT,
+
+                resumed_at TEXT,
+
+                submitted_at TEXT,
+
+                FOREIGN KEY (candidate_id)
+                    REFERENCES candidates(id)
+            )
+        """)
+
+
+        # ----------------------------------------
+        # INTEGRITY SCORES
+        # ----------------------------------------
+        connection.execute("""
+            CREATE TABLE IF NOT EXISTS integrity_scores (
+
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+
+                session_id TEXT UNIQUE NOT NULL,
+
+                candidate_id INTEGER NOT NULL,
+
+                event_penalty REAL NOT NULL,
+
+                face_presence_ratio REAL NOT NULL,
+
+                integrity_score REAL NOT NULL,
+
+                risk_level TEXT NOT NULL,
+
+                computed_at TEXT NOT NULL,
+
+                FOREIGN KEY (candidate_id)
+                    REFERENCES candidates(id)
+            )
+        """)
+
+
+        # ----------------------------------------
+        # SAVE DATABASE CHANGES
+        # ----------------------------------------
+        connection.commit()
+
+
+        # ----------------------------------------
+        # CHECK SUSPICIOUS EVENTS
+        # ----------------------------------------
+        # IMPORTANT:
+        # The connection is still OPEN here.
+        # Therefore SELECT works correctly.
+
+        result = connection.execute(
+            "SELECT * FROM suspicious_events"
+        ).fetchall()
+
+        print("Number of suspicious event rows:", len(result))
+
+        for row in result:
+            print(dict(row))
+
+
+    except Exception as e:
+
+        # If something goes wrong, undo
+        # uncommitted database changes.
+
+        connection.rollback()
+
+        print("Database initialization error:", e)
+
+        raise
+
+
+    finally:
+
+        # Close the connection only after
+        # all database operations are finished.
+
+        connection.close()
+
+
+# ----------------------------------------
+# RUN INITIALIZATION
+# ----------------------------------------
+if __name__ == "__main__":
+    init_db()

@@ -2,3 +2,5 @@ python -m pip install flask
 python -m  pip install opencv-python
 pythom -m pip install opencv
 
+python -m pip install pandas matplotlib seaborn scikit-learn
+pythonn-m pip install

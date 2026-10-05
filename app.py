@@ -1,29 +1,32 @@
+import sqlite3
+import uuid
+
+from datetime import datetime
+
 from flask import (
     Flask,
-    request,
+    redirect,
     render_template,
+    request,
     session,
-    redirect
+    url_for,
+    jsonify
 )
-
-from database import init_db, get_db
 
 from werkzeug.security import (
     generate_password_hash,
     check_password_hash
 )
-from monitoring import eventdetector
+
+from database import init_db, get_db
 from camera import save_captured_photo
 
+from monitoring.face_monitoring import detect_face
 from monitoring.face_logger import log_face_state
 
-from monitoring.face_monitoring import detect_face
+from monitoring import eventdetector
 
-import os
-import sqlite3
-import uuid
-
-from datetime import datetime
+from monitoring.integrity_score import compute_integrity_score
 
 
 # ============================================================
@@ -32,15 +35,11 @@ from datetime import datetime
 
 app = Flask(__name__)
 
-# Secret key used for Flask sessions
-app.secret_key = "exam_guard_key"
-
-# Folder where candidate photos are stored
-upload_folder = "static/uploads"
+app.secret_key = "examguard-secret-key"
 
 
 # ============================================================
-# INITIALIZE DATABASE
+# DATABASE INITIALIZATION
 # ============================================================
 
 init_db()
@@ -53,59 +52,28 @@ init_db()
 @app.route("/")
 def home():
 
-    return "Welcome to Exam Guard"
+    # If candidate is already logged in,
+    # directly open dashboard.
 
+    if "candidate_id" in session:
 
-# ============================================================
-# CAPTURE CANDIDATE PHOTO
-# ============================================================
+        return redirect(
+            url_for("dashboard")
+        )
 
-@app.route("/capture-photo", methods=["POST"])
-def capture_candidate_photo():
-
-    # Get photo uploaded from browser
-    photo = request.files.get("photo")
-
-    # Check whether photo was received
-    if not photo:
-
-        return {
-            "success": False,
-            "message": "No photo uploaded"
-        }, 400
-
-    # Convert uploaded photo into bytes
-    image_data = photo.read()
-
-    # Save photo using camera.py
-    photo_path = save_captured_photo(
-        image_data
+    return redirect(
+        url_for("login")
     )
-
-    # Check whether photo was successfully saved
-    if not photo_path:
-
-        return {
-            "success": False,
-            "message": "Could not process photo"
-        }, 400
-
-    # Store photo path temporarily in session
-    # Registration will use this path
-    session["capture_photo"] = photo_path
-
-    return {
-        "success": True,
-        "message": "Photo captured successfully",
-        "photo_path": photo_path
-    }, 200
 
 
 # ============================================================
 # REGISTER
 # ============================================================
 
-@app.route("/register", methods=["GET", "POST"])
+@app.route(
+    "/register",
+    methods=["GET", "POST"]
+)
 def register():
 
     # --------------------------------------------------------
@@ -130,7 +98,7 @@ def register():
     email = request.form.get(
         "email",
         ""
-    ).strip()
+    ).strip().lower()
 
     password = request.form.get(
         "password",
@@ -138,14 +106,14 @@ def register():
     )
 
     # --------------------------------------------------------
-    # VALIDATE FORM DATA
+    # VALIDATE FORM
     # --------------------------------------------------------
 
     if not name or not email or not password:
 
         return render_template(
             "register.html",
-            error="Please fill in all required fields"
+            error="Please fill in every field."
         )
 
     # --------------------------------------------------------
@@ -160,7 +128,7 @@ def register():
 
         return render_template(
             "register.html",
-            error="Please capture your photo before registering"
+            error="Please capture your photo before registering."
         )
 
     # --------------------------------------------------------
@@ -205,13 +173,24 @@ def register():
         )
 
         # ----------------------------------------------------
-        # SAVE DATABASE CHANGES
+        # SAVE
         # ----------------------------------------------------
 
         connection.commit()
 
-        print(
-            f"Registration successful for: {name}"
+        # Remove temporary photo information
+        # from Flask session.
+
+        session.pop(
+            "capture_photo",
+            None
+        )
+
+        return redirect(
+            url_for(
+                "login",
+                registered=1
+            )
         )
 
     # --------------------------------------------------------
@@ -220,24 +199,17 @@ def register():
 
     except sqlite3.IntegrityError:
 
-        # Delete captured photo
-        if os.path.exists(photo_path):
+        if connection:
 
-            os.remove(photo_path)
-
-        # Remove photo from session
-        session.pop(
-            "capture_photo",
-            None
-        )
+            connection.rollback()
 
         return render_template(
             "register.html",
-            error="Email already registered. Please use a different email."
+            error="An account with this email already exists."
         )
 
     # --------------------------------------------------------
-    # OTHER DATABASE ERROR
+    # OTHER ERROR
     # --------------------------------------------------------
 
     except Exception as e:
@@ -256,141 +228,204 @@ def register():
             error="Registration failed. Please try again."
         )
 
-    # --------------------------------------------------------
-    # CLOSE DATABASE
-    # --------------------------------------------------------
-
     finally:
 
         if connection:
 
             connection.close()
 
+
+# ============================================================
+# CAPTURE PHOTO
+# ============================================================
+
+@app.route(
+    "/capture-photo",
+    methods=["POST"]
+)
+def capture_candidate_photo():
+
     # --------------------------------------------------------
-    # REMOVE TEMPORARY PHOTO FROM SESSION
+    # GET PHOTO
     # --------------------------------------------------------
 
-    session.pop(
-        "capture_photo",
-        None
+    photo = request.files.get(
+        "photo"
     )
 
+    if not photo:
+
+        return jsonify({
+            "success": False,
+            "message": "No photo received"
+        }), 400
+
     # --------------------------------------------------------
-    # REDIRECT TO LOGIN
+    # READ IMAGE
     # --------------------------------------------------------
 
-    return redirect(
-        "/login"
+    image_data = photo.read()
+
+    if not image_data:
+
+        return jsonify({
+            "success": False,
+            "message": "Empty photo received"
+        }), 400
+
+    # --------------------------------------------------------
+    # SAVE PHOTO
+    # --------------------------------------------------------
+
+    photo_path = save_captured_photo(
+        image_data
     )
+
+    if not photo_path:
+
+        return jsonify({
+            "success": False,
+            "message": "Could not process photo"
+        }), 400
+
+    # --------------------------------------------------------
+    # STORE PHOTO PATH IN SESSION
+    # --------------------------------------------------------
+
+    session["capture_photo"] = photo_path
+
+    return jsonify({
+        "success": True,
+        "message": "Photo captured successfully",
+        "photo_path": photo_path
+    })
 
 
 # ============================================================
 # LOGIN
 # ============================================================
 
-@app.route("/login", methods=["GET", "POST"])
+@app.route(
+    "/login",
+    methods=["GET", "POST"]
+)
 def login():
 
     # --------------------------------------------------------
-    # SHOW LOGIN PAGE
+    # PROCESS LOGIN
     # --------------------------------------------------------
 
-    if request.method == "GET":
+    if request.method == "POST":
+
+        email = request.form.get(
+            "email",
+            ""
+        ).strip().lower()
+
+        password = request.form.get(
+            "password",
+            ""
+        )
+
+        # ----------------------------------------------------
+        # VALIDATION
+        # ----------------------------------------------------
+
+        if not email or not password:
+
+            return render_template(
+                "login.html",
+                error="Please enter email and password."
+            )
+
+        connection = None
+
+        try:
+
+            # ------------------------------------------------
+            # DATABASE CONNECTION
+            # ------------------------------------------------
+
+            connection = get_db()
+
+            # ------------------------------------------------
+            # FIND CANDIDATE
+            # ------------------------------------------------
+
+            candidate = connection.execute(
+                """
+                SELECT *
+                FROM candidates
+                WHERE email = ?
+                """,
+                (email,)
+            ).fetchone()
+
+        except Exception as e:
+
+            print(
+                "Login error:",
+                e
+            )
+
+            return render_template(
+                "login.html",
+                error="Login failed. Please try again."
+            )
+
+        finally:
+
+            if connection:
+
+                connection.close()
+
+        # ----------------------------------------------------
+        # VERIFY PASSWORD
+        # ----------------------------------------------------
+
+        if (
+            candidate
+            and check_password_hash(
+                candidate["password"],
+                password
+            )
+        ):
+
+            # Store candidate information
+            # in Flask session.
+
+            session["candidate_id"] = (
+                candidate["id"]
+            )
+
+            session["candidate_name"] = (
+                candidate["name"]
+            )
+
+            return redirect(
+                url_for("dashboard")
+            )
+
+        # ----------------------------------------------------
+        # INVALID LOGIN
+        # ----------------------------------------------------
 
         return render_template(
-            "login.html"
+            "login.html",
+            error="Invalid email or password."
         )
 
     # --------------------------------------------------------
-    # GET LOGIN FORM DATA
+    # GET LOGIN PAGE
     # --------------------------------------------------------
 
-    email = request.form.get(
-        "email",
-        ""
-    ).strip()
-
-    password = request.form.get(
-        "password",
-        ""
+    registered = request.args.get(
+        "registered"
     )
-
-    # --------------------------------------------------------
-    # VALIDATE INPUT
-    # --------------------------------------------------------
-
-    if not email or not password:
-
-        return render_template(
-            "login.html",
-            error="Please enter email and password"
-        )
-
-    connection = None
-    candidate = None
-
-    try:
-
-        # ----------------------------------------------------
-        # CONNECT TO DATABASE
-        # ----------------------------------------------------
-
-        connection = get_db()
-
-        # ----------------------------------------------------
-        # FIND CANDIDATE
-        # ----------------------------------------------------
-
-        candidate = connection.execute(
-            """
-            SELECT *
-            FROM candidates
-            WHERE email = ?
-            """,
-            (email,)
-        ).fetchone()
-
-    except Exception as e:
-
-        print(
-            "Login error:",
-            e
-        )
-
-        return render_template(
-            "login.html",
-            error="Login failed. Please try again."
-        )
-
-    finally:
-
-        if connection:
-
-            connection.close()
-
-    # --------------------------------------------------------
-    # CHECK PASSWORD
-    # --------------------------------------------------------
-
-    if candidate and check_password_hash(
-        candidate["password"],
-        password
-    ):
-
-        # Store candidate ID in session
-        session["candidate_id"] = candidate["id"]
-
-        return redirect(
-            "/dashboard"
-        )
-
-    # --------------------------------------------------------
-    # INVALID LOGIN
-    # --------------------------------------------------------
 
     return render_template(
         "login.html",
-        error="Invalid email or password"
+        registered=registered
     )
 
 
@@ -402,20 +437,93 @@ def login():
 def dashboard():
 
     # --------------------------------------------------------
-    # CHECK WHETHER CANDIDATE IS LOGGED IN
+    # CHECK LOGIN
     # --------------------------------------------------------
 
     if "candidate_id" not in session:
 
-        return "Please login first", 401
+        return redirect(
+            url_for("login")
+        )
 
-    # --------------------------------------------------------
-    # SHOW DASHBOARD
-    # --------------------------------------------------------
+    candidate_id = session[
+        "candidate_id"
+    ]
 
-    return render_template(
-        "dashboard.html"
-    )
+    connection = None
+
+    try:
+
+        connection = get_db()
+
+        # ----------------------------------------------------
+        # GET CANDIDATE
+        # ----------------------------------------------------
+
+        candidate = connection.execute(
+            """
+            SELECT *
+            FROM candidates
+            WHERE id = ?
+            """,
+            (candidate_id,)
+        ).fetchone()
+
+        # Candidate no longer exists
+
+        if not candidate:
+
+            session.clear()
+
+            return redirect(
+                url_for("login")
+            )
+
+        # ----------------------------------------------------
+        # GET RECENT EXAM SESSIONS
+        # ----------------------------------------------------
+
+        recent_sessions = connection.execute(
+            """
+            SELECT
+                session_id,
+                status,
+                started_at,
+                submitted_at
+            FROM exam_sessions
+            WHERE candidate_id = ?
+            ORDER BY started_at DESC
+            LIMIT 5
+            """,
+            (candidate_id,)
+        ).fetchall()
+
+        # ----------------------------------------------------
+        # SEND DATA TO DASHBOARD
+        # ----------------------------------------------------
+
+        return render_template(
+            "dashboard.html",
+            candidate=candidate,
+            recent_sessions=recent_sessions
+        )
+
+    except Exception as e:
+
+        print(
+            "Dashboard error:",
+            e
+        )
+
+        return render_template(
+            "dashboard.html"
+        )
+
+    finally:
+
+        if connection:
+
+            connection.close()
 
 
 # ============================================================
@@ -431,40 +539,472 @@ def start_exam():
 
     if "candidate_id" not in session:
 
-        return {
-            "success": False,
-            "message": "Candidate is not logged in"
-        }, 401
+        return redirect(
+            url_for("login")
+        )
 
     # --------------------------------------------------------
-    # CREATE UNIQUE EXAM SESSION ID
+    # CREATE UNIQUE EXAM SESSION
     # --------------------------------------------------------
 
     exam_session_id = str(
         uuid.uuid4()
     )
 
-    # Store exam session ID
-    session["exam_session_id"] = exam_session_id
-
-    print(
-        f"Exam started: {exam_session_id}"
+    session["exam_session_id"] = (
+        exam_session_id
     )
+
+    connection = None
+
+    try:
+
+        connection = get_db()
+
+        # ----------------------------------------------------
+        # INSERT EXAM SESSION
+        # ----------------------------------------------------
+
+        connection.execute(
+            """
+            INSERT INTO exam_sessions
+            (
+                candidate_id,
+                session_id,
+                status,
+                started_at
+            )
+            VALUES (?, ?, 'in_progress', ?)
+            """,
+            (
+                session["candidate_id"],
+                exam_session_id,
+                datetime.now().isoformat()
+            )
+        )
+
+        connection.commit()
+
+    except Exception as e:
+
+        if connection:
+
+            connection.rollback()
+
+        print(
+            "Start exam error:",
+            e
+        )
+
+        session.pop(
+            "exam_session_id",
+            None
+        )
+
+        return jsonify({
+            "success": False,
+            "message": "Could not start examination"
+        }), 500
+
+    finally:
+
+        if connection:
+
+            connection.close()
 
     # --------------------------------------------------------
     # OPEN EXAM PAGE
     # --------------------------------------------------------
 
     return render_template(
-        "exam.html"
+        "exam.html",
+        candidate_name=session.get(
+            "candidate_name"
+        )
     )
+
+
+# ============================================================
+# PAUSE EXAM
+# ============================================================
+
+@app.route(
+    "/pause-exam",
+    methods=["POST"]
+)
+def pause_exam():
+
+    # --------------------------------------------------------
+    # CHECK ACTIVE SESSION
+    # --------------------------------------------------------
+
+    if (
+        "candidate_id" not in session
+        or "exam_session_id" not in session
+    ):
+
+        return jsonify({
+            "success": False,
+            "message": "No active exam session"
+        }), 400
+
+    candidate_id = session[
+        "candidate_id"
+    ]
+
+    exam_session_id = session[
+        "exam_session_id"
+    ]
+
+    connection = None
+
+    try:
+
+        connection = get_db()
+
+        # ----------------------------------------------------
+        # PAUSE EXAM
+        # ----------------------------------------------------
+
+        connection.execute(
+            """
+            UPDATE exam_sessions
+            SET
+                status = 'paused',
+                paused_at = ?
+            WHERE session_id = ?
+            AND candidate_id = ?
+            """,
+            (
+                datetime.now().isoformat(),
+                exam_session_id,
+                candidate_id
+            )
+        )
+
+        connection.commit()
+
+    except Exception as e:
+
+        if connection:
+
+            connection.rollback()
+
+        print(
+            "Pause exam error:",
+            e
+        )
+
+        return jsonify({
+            "success": False,
+            "message": "Could not pause exam"
+        }), 500
+
+    finally:
+
+        if connection:
+
+            connection.close()
+
+    return jsonify({
+        "success": True,
+        "message": "Exam paused"
+    })
+
+
+# ============================================================
+# RESUME EXAM
+# ============================================================
+
+@app.route(
+    "/resume-exam",
+    methods=["POST"]
+)
+def resume_exam():
+
+    # --------------------------------------------------------
+    # CHECK ACTIVE SESSION
+    # --------------------------------------------------------
+
+    if (
+        "candidate_id" not in session
+        or "exam_session_id" not in session
+    ):
+
+        return jsonify({
+            "success": False,
+            "message": "No active exam session"
+        }), 400
+
+    candidate_id = session[
+        "candidate_id"
+    ]
+
+    exam_session_id = session[
+        "exam_session_id"
+    ]
+
+    connection = None
+
+    try:
+
+        connection = get_db()
+
+        # ----------------------------------------------------
+        # RESUME EXAM
+        # ----------------------------------------------------
+
+        connection.execute(
+            """
+            UPDATE exam_sessions
+            SET
+                status = 'in_progress',
+                resumed_at = ?
+            WHERE session_id = ?
+            AND candidate_id = ?
+            """,
+            (
+                datetime.now().isoformat(),
+                exam_session_id,
+                candidate_id
+            )
+        )
+
+        connection.commit()
+
+    except Exception as e:
+
+        if connection:
+
+            connection.rollback()
+
+        print(
+            "Resume exam error:",
+            e
+        )
+
+        return jsonify({
+            "success": False,
+            "message": "Could not resume exam"
+        }), 500
+
+    finally:
+
+        if connection:
+
+            connection.close()
+
+    return jsonify({
+        "success": True,
+        "message": "Exam resumed"
+    })
+
+
+# ============================================================
+# SUBMIT EXAM
+# ============================================================
+
+@app.route(
+    "/submit-exam",
+    methods=["POST"]
+)
+def submit_exam():
+
+    # --------------------------------------------------------
+    # 1. CHECK LOGIN AND EXAM SESSION
+    # --------------------------------------------------------
+
+    if (
+        "candidate_id" not in session
+        or "exam_session_id" not in session
+    ):
+
+        return jsonify({
+            "success": False,
+            "message": "No active exam session"
+        }), 400
+
+    candidate_id = session[
+        "candidate_id"
+    ]
+
+    exam_session_id = session[
+        "exam_session_id"
+    ]
+
+    submitted_at = (
+        datetime.now().isoformat()
+    )
+
+    connection = None
+
+    try:
+
+        connection = get_db()
+
+        # ----------------------------------------------------
+        # 2. CHECK EXAM SESSION
+        # ----------------------------------------------------
+
+        exam_session = connection.execute(
+            """
+            SELECT *
+            FROM exam_sessions
+            WHERE session_id = ?
+            AND candidate_id = ?
+            """,
+            (
+                exam_session_id,
+                candidate_id
+            )
+        ).fetchone()
+
+        if not exam_session:
+
+            return jsonify({
+                "success": False,
+                "message": "Exam session not found"
+            }), 404
+
+        # ----------------------------------------------------
+        # PREVENT DOUBLE SUBMISSION
+        # ----------------------------------------------------
+
+        if (
+            "status" in exam_session.keys()
+            and exam_session["status"] == "submitted"
+        ):
+
+            return jsonify({
+                "success": False,
+                "message": "Exam has already been submitted"
+            }), 400
+
+        # ----------------------------------------------------
+        # 3. UPDATE EXAM SESSION
+        # ----------------------------------------------------
+
+        connection.execute(
+            """
+            UPDATE exam_sessions
+            SET
+                status = 'submitted',
+                submitted_at = ?
+            WHERE session_id = ?
+            AND candidate_id = ?
+            """,
+            (
+                submitted_at,
+                exam_session_id,
+                candidate_id
+            )
+        )
+
+        connection.commit()
+
+    except Exception as e:
+
+        if connection:
+
+            connection.rollback()
+
+        print(
+            "Exam submission error:",
+            e
+        )
+
+        return jsonify({
+            "success": False,
+            "message": "Could not submit examination"
+        }), 500
+
+    finally:
+
+        if connection:
+
+            connection.close()
+
+    # --------------------------------------------------------
+    # 4. CALCULATE INTEGRITY SCORE
+    # --------------------------------------------------------
+
+
+    # --------------------------------------------------------
+
+    try:
+
+        result = compute_integrity_score(
+            candidate_id,
+            exam_session_id
+        )
+
+    except Exception as e:
+
+        print(
+            "Integrity score error:",
+            e
+        )
+
+        # If scoring fails, still report
+        # successful exam submission.
+
+        result = {
+            "integrity_score": None,
+            "face_presence_ratio": None,
+            "event_penalty": None,
+            "risk_level": "NOT_CALCULATED"
+        }
+
+    # --------------------------------------------------------
+    # 5. REMOVE ACTIVE EXAM SESSION
+    # --------------------------------------------------------
+
+    session.pop(
+        "exam_session_id",
+        None
+    )
+
+    # --------------------------------------------------------
+    # 6. RETURN FINAL RESULT
+    # --------------------------------------------------------
+
+    return jsonify({
+        "success": True,
+        "message": "Exam submitted successfully",
+
+        "integrity_score":
+            result.get(
+                "integrity_score"
+            ),
+
+        "face_presence_ratio":
+            result.get(
+                "face_presence_ratio"
+            ),
+
+        "event_penalty":
+            result.get(
+                "event_penalty"
+            ),
+
+        "risk_level":
+            result.get(
+                "risk_level"
+            ),
+
+        "redirect":
+            url_for("dashboard")
+    })
 
 
 # ============================================================
 # FACE MONITORING
 # ============================================================
 
-@app.route("/monitor-face", methods=["POST"])
+@app.route(
+    "/monitor-face",
+    methods=["POST"]
+)
 def monitor_face():
 
     # --------------------------------------------------------
@@ -473,10 +1013,10 @@ def monitor_face():
 
     if "candidate_id" not in session:
 
-        return {
+        return jsonify({
             "success": False,
-            "message": "Candidate is not logged in"
-        }, 401
+            "message": "Candidate not logged in"
+        }), 401
 
     candidate_id = session[
         "candidate_id"
@@ -492,13 +1032,16 @@ def monitor_face():
 
     if not exam_session_id:
 
-        return {
+        return jsonify({
             "success": False,
-            "message": "Exam not started"
-        }, 400
+            "message": "Exam session not started"
+        }), 400
 
     # --------------------------------------------------------
-    # GET IMAGE FROM BROWSER
+    # GET IMAGE
+    #
+    # Your current exam.html sends:
+    # formData.append("image", blob)
     # --------------------------------------------------------
 
     image = request.files.get(
@@ -507,10 +1050,10 @@ def monitor_face():
 
     if not image:
 
-        return {
+        return jsonify({
             "success": False,
             "message": "No image received"
-        }, 400
+        }), 400
 
     # --------------------------------------------------------
     # READ IMAGE
@@ -520,13 +1063,17 @@ def monitor_face():
 
     if not image_data:
 
-        return {
+        return jsonify({
             "success": False,
             "message": "Empty image received"
-        }, 400
+        }), 400
 
     # --------------------------------------------------------
-    # DETECT FACE
+    # FACE DETECTION
+    #
+    # Your current face_monitoring.py returns:
+    #
+    # (face_present, processed_image)
     # --------------------------------------------------------
 
     try:
@@ -542,22 +1089,26 @@ def monitor_face():
             e
         )
 
-        return {
+        return jsonify({
             "success": False,
             "message": "Face detection failed"
-        }, 500
+        }), 500
 
     # --------------------------------------------------------
-    # DETERMINE FACE STATE
+    # DETERMINE STATE
     # --------------------------------------------------------
 
     if face_present:
 
-        current_state = "face_detected"
+        current_state = (
+            "face_detected"
+        )
 
     else:
 
-        current_state = "face_absent"
+        current_state = (
+            "face_absent"
+        )
 
     # --------------------------------------------------------
     # LOG FACE STATE
@@ -578,26 +1129,29 @@ def monitor_face():
             e
         )
 
-        return {
+        return jsonify({
             "success": False,
             "message": "Could not log face state"
-        }, 500
+        }), 500
 
     # --------------------------------------------------------
-    # RETURN RESULT TO BROWSER
+    # RETURN RESULT
     # --------------------------------------------------------
 
-    return {
+    return jsonify({
         "success": True,
         "state": current_state
-    }, 200
+    })
 
 
 # ============================================================
-# LOG BROWSER EVENT
+# BROWSER EVENT LOGGING
 # ============================================================
 
-@app.route("/log-browser-event", methods=["POST"])
+@app.route(
+    "/log-browser-event",
+    methods=["POST"]
+)
 def log_browser_event():
 
     # --------------------------------------------------------
@@ -606,10 +1160,10 @@ def log_browser_event():
 
     if "candidate_id" not in session:
 
-        return {
+        return jsonify({
             "success": False,
-            "message": "Candidate is not logged in"
-        }, 401
+            "message": "Candidate not logged in"
+        }), 401
 
     candidate_id = session[
         "candidate_id"
@@ -625,31 +1179,41 @@ def log_browser_event():
 
     if not exam_session_id:
 
-        return {
+        return jsonify({
             "success": False,
-            "message": "Exam not started"
-        }, 400
+            "message": "Exam session not started"
+        }), 400
 
     # --------------------------------------------------------
-    # GET JSON DATA
+    # GET JSON
     # --------------------------------------------------------
 
-    data = request.get_json()
+    data = request.get_json(
+        silent=True
+    )
 
-    if not data or "event" not in data:
+    if not data:
 
-        return {
+        return jsonify({
             "success": False,
             "message": "No event data received"
-        }, 400
+        }), 400
 
     # --------------------------------------------------------
-    # GET EVENT TYPE
+    # IMPORTANT:
+    #
+    # Your current exam.html sends:
+    #
+    # {
+    #     event: eventType,
+    #     details: details
+    # }
+    #
+    # Therefore we use "event" here.
     # --------------------------------------------------------
 
     event_type = data.get(
-        "event",
-        ""
+        "event"
     )
 
     details = data.get(
@@ -657,39 +1221,25 @@ def log_browser_event():
         ""
     )
 
-    # Make sure event is a string
-    if not isinstance(event_type, str):
-
-        return {
-            "success": False,
-            "message": "Invalid event type"
-        }, 400
-
-    event_type = event_type.strip()
-
     # --------------------------------------------------------
     # VALIDATE EVENT
     # --------------------------------------------------------
 
     if not event_type:
 
-        return {
+        return jsonify({
             "success": False,
             "message": "Event type is required"
-        }, 400
+        }), 400
 
     connection = None
 
     try:
 
-        # ----------------------------------------------------
-        # CONNECT TO DATABASE
-        # ----------------------------------------------------
-
         connection = get_db()
 
         # ----------------------------------------------------
-        # INSERT BROWSER EVENT
+        # SAVE BROWSER EVENT
         # ----------------------------------------------------
 
         connection.execute(
@@ -714,13 +1264,21 @@ def log_browser_event():
         )
 
         # ----------------------------------------------------
-        # SAVE CHANGES
+        # RUN RULE-BASED EVENT DETECTOR
+        # ----------------------------------------------------
+
+        eventdetector.evaluate_browser_event(
+            connection,
+            candidate_id,
+            exam_session_id,
+            event_type
+        )
+
+        # ----------------------------------------------------
+        # COMMIT
         # ----------------------------------------------------
 
         connection.commit()
-
-        eventdetector.evaluate_browser_event(connection,candidate_id,exam_session_id,event_type)
-
 
     except Exception as e:
 
@@ -733,10 +1291,10 @@ def log_browser_event():
             e
         )
 
-        return {
+        return jsonify({
             "success": False,
-            "message": str(e)
-        }, 500
+            "message": "Could not save browser event"
+        }), 500
 
     finally:
 
@@ -744,14 +1302,10 @@ def log_browser_event():
 
             connection.close()
 
-    # --------------------------------------------------------
-    # SUCCESS
-    # --------------------------------------------------------
-
-    return {
+    return jsonify({
         "success": True,
         "message": "Browser event saved"
-    }, 200
+    })
 
 
 # ============================================================
@@ -761,17 +1315,17 @@ def log_browser_event():
 @app.route("/logout")
 def logout():
 
-    # Clear login session
-    # Also removes exam_session_id
+    # Remove all session information.
+
     session.clear()
 
     return redirect(
-        "/login"
+        url_for("login")
     )
 
 
 # ============================================================
-# RUN APPLICATION
+# RUN FLASK APPLICATION
 # ============================================================
 
 if __name__ == "__main__":
